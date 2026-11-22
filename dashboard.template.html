@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sales & Revenue Analysis</title>
+<style>
+:root{color-scheme:light;--ink:#172339;--muted:#52617a;--border:#dfe6ef;--surface:#fff;--accent:#5142c4;--profit:#007c70}
+*{box-sizing:border-box}
+body{margin:0;background:#f2f5fa;color:var(--ink);font:16px/1.45 system-ui,sans-serif}
+main{max-width:1440px;margin:auto;padding:26px clamp(14px,3vw,40px) 64px}
+.masthead{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.masthead a{color:var(--ink);text-decoration:none;font-weight:650;font-size:.9rem}
+.brand{display:inline-flex;gap:10px;align-items:center}
+.brand-mark{display:inline-flex;align-items:end;gap:3px;padding:8px;background:var(--accent);border-radius:9px}
+.brand-mark i{width:4px;background:#fff;border-radius:2px;height:8px}
+.brand-mark i:nth-child(2){height:12px}.brand-mark i:nth-child(3){height:16px}
+nav{display:flex;flex-wrap:wrap;gap:4px}
+nav a{display:block;padding:6px 10px;border-radius:7px}nav a:hover{background:#e7eaf8;color:#3d319f}
+header{padding:clamp(20px,3vw,38px);background:linear-gradient(120deg,#151e3b 15%,#332976 100%);color:white;border-radius:18px}
+h1{margin:0;font-size:clamp(1.85rem,4vw,3rem);font-weight:720;letter-spacing:-.045em;line-height:1.1}
+h2{font-size:1.08rem;line-height:1.25;margin:0 0 12px;letter-spacing:-.015em}
+p{margin:8px 0;color:var(--muted)}
+header p{margin:10px 0 0;color:#e0e5fe;font-size:.9rem}
+section,article{min-width:0;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:0 2px 6px #18284408;scroll-margin-top:16px}
+.filters,.cards,.grid,.overview{display:grid;gap:12px;margin-top:14px}
+.filters{grid-template-columns:repeat(6,minmax(0,1fr)) auto;align-items:end}
+.cards{grid-template-columns:repeat(7,minmax(0,1fr))}
+.cards article{border-top:3px solid #c9c4fb;padding:12px 13px}
+.cards article:first-child{background:#eeecff;border-color:#c7c0fb;border-top-color:var(--accent)}
+.cards article:nth-child(2),.cards article:nth-child(3){border-top-color:#5cb9aa}
+.cards article:last-child{border-top-color:#e0ae73}
+.overview{grid-template-columns:minmax(0,1.9fr) minmax(0,1fr)}
+.grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+label{display:grid;gap:6px;font-size:.875rem;color:#465675;font-weight:650}
+select,button{background:#f7f9fe;color:var(--ink);border:1px solid #cbd5e4;border-radius:8px;padding:8px 9px;width:100%;min-height:40px;font:inherit}
+button{background:#ece9ff;border-color:#d7d0ff;color:#34288c;font-size:.875rem;font-weight:700;cursor:pointer}
+button:hover{background:#e1dcff}
+select:hover{border-color:#8778cf}
+:focus-visible{outline:3px solid #7260de;outline-offset:3px}
+strong{display:block;font-size:clamp(1.18rem,1.72vw,1.55rem);letter-spacing:-.045em;margin-top:3px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+small{color:var(--muted);font-size:.82rem}
+.wide{grid-column:1/-1}.scroll{overflow:auto}
+table{border-collapse:collapse;width:100%;font-size:.875rem;white-space:nowrap;font-variant-numeric:tabular-nums}
+th,td{padding:10px;border-bottom:1px solid #e7ebf2;text-align:right}
+th:first-child,td:first-child{text-align:left}thead{background:#f0f2fa}tbody tr:hover{background:#f6f7fb}
+.line{display:grid;grid-template-columns:1fr auto;align-items:center;gap:3px 8px;margin:12px 0;font-size:.875rem}
+.line-name{font-weight:700}.line-value{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+.track{grid-column:1/-1;height:8px;background:#edeafc;border-radius:8px}
+.fill{height:100%;background:linear-gradient(90deg,#8f80ef,#5142c4);border-radius:8px}
+.line small{grid-column:1/-1}
+.chart-heading{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:0 12px}
+.chart-frame{position:relative}
+canvas{display:block;width:100%;height:248px}
+.tooltip{position:absolute;z-index:1;top:6px;pointer-events:none;background:#172339;color:#fff;border-radius:8px;padding:8px 11px;font-size:.8rem;white-space:pre-line;box-shadow:0 4px 14px #17233930;font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.83rem;color:#465675}
+.legend span::before{content:'';display:inline-block;width:10px;height:10px;background:var(--color);border-radius:3px;margin-right:5px}
+details{border-top:1px solid var(--border);padding-top:9px}summary{cursor:pointer;color:#4033a7;font-size:.875rem;font-weight:650}
+#rank{max-width:250px;margin-bottom:12px}#survey{margin-top:12px}
+@media(max-width:1050px){.filters{grid-template-columns:repeat(4,minmax(0,1fr))}.cards{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:760px){.overview,.grid{grid-template-columns:1fr}.cards,.filters{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:460px){.cards,.filters{grid-template-columns:repeat(2,minmax(0,1fr))}.masthead{gap:6px}nav a{padding:6px 8px}section,article{padding:12px}}
+</style>
+</head>
+<body><main id="top">
+<div class="masthead">
+<a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>Sales Analytics</a>
+<nav aria-label="Report sections"><a href="#overview">Overview</a><a href="#products-panel">Products</a><a href="#research-panel">Research</a></nav>
+</div>
+<header><h1>Sales &amp; Revenue Analysis</h1><p id="source"></p></header>
+<section class="filters" id="filters" aria-label="Report filters"></section>
+<div class="cards" id="cards" aria-live="polite"></div>
+<div class="overview" id="overview">
+<section><div class="chart-heading"><h2>Monthly revenue and profit</h2><div class="legend"><span style="--color:#5142c4">Revenue</span><span style="--color:#007c70">Profit</span></div></div><div class="chart-frame"><canvas id="trend" role="img" aria-label="Monthly revenue and profit chart. Exact values are available in the table below."></canvas><div id="chart-tooltip" class="tooltip" hidden></div></div><details><summary>Monthly figures</summary><div class="scroll" id="monthly"></div></details></section>
+<section><h2>Revenue by region</h2><div id="regions"></div></section>
+</div><div class="grid">
+<section><h2>Revenue by category</h2><div id="categories"></div></section>
+<section><h2>Customer segment performance</h2><div class="scroll" id="segments"></div></section>
+<section><h2>Discount, volume and margin</h2><div class="scroll" id="discounts"></div></section>
+<section><h2>Seasonality by calendar month</h2><p>Average across the selected periods.</p><div class="scroll" id="season"></div></section>
+<section><h2>State performance</h2><div class="scroll" id="states"></div></section>
+<section class="wide" id="products-panel"><h2>Product performance</h2><label>Rank products by<select id="rank"><option value="sales">Revenue</option><option value="profit">Profit</option><option value="loss">Largest loss</option></select></label><div class="scroll" id="products"></div></section>
+<section class="wide" id="research-panel"><h2>Research results</h2><p>Full dataset statistics. Dashboard filters apply to the descriptive views above.</p><div class="scroll" id="research"></div><p id="survey"></p></section>
+</div></main>
+<script type="application/json" id="payload">/* PROJECT_DATA */</script>
+<script>
+'use strict';
+const {data, findings} = JSON.parse(document.getElementById('payload').textContent);
+const $ = id => document.getElementById(id);
+const money = new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0});
+const precise = new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'});
+const integer = new Intl.NumberFormat('en-US');
+const fmt = value => money.format(value);
+const pct = value => value == null ? '—' : (value*100).toFixed(1)+'%';
+const ratio = (a,b) => b ? a/b : null;
+const sum = (rows,i) => rows.reduce((total,row)=>total+row[i],0);
+const unique = values => [...new Set(values)].sort();
+const group = (rows,key) => Map.groupBy ? Map.groupBy(rows,key) : rows.reduce((map,row)=>{
+  const value=key(row); if(!map.has(value))map.set(value,[]); map.get(value).push(row); return map;
+},new Map());
+const create = (tag,content,parent) => {
+  const el=document.createElement(tag); if(content!=null)el.textContent=content;
+  if(parent)parent.append(el); return el;
+};
+function table(id,headers,rows){
+  const parent=$(id);parent.replaceChildren();
+  if(!rows.length){create('p','No matching sales.',parent);return;}
+  const t=create('table',null,parent);
+  const head=create('tr',null,create('thead',null,t));
+  headers.forEach(h=>{create('th',h,head).scope='col';});
+  const body=create('tbody',null,t);
+  rows.forEach(values=>{const tr=create('tr',null,body);values.forEach(v=>create('td',v,tr));});
+}
+const filters=[['Year',0],['Region',2],['State',3],['Category',4],['Sub-category',5],['Segment',6]];
+const dateRange=[data[0][0],data[data.length-1][0]];
+$('source').textContent=findings.source+' · '+dateRange.join(' to ')+' · USD';
+for(const [label,index] of filters){
+  const box=create('label',label,$('filters'));
+  const sel=create('select',null,box);sel.id='filter'+index;
+  sel.add(new Option('All',''));
+  for(const value of unique(data.map(r=>index===0?r[0].slice(0,4):r[index])))sel.add(new Option(value,value));
+  sel.addEventListener('change',render);
+}
+const reset=create('button','Reset filters',$('filters'));
+reset.addEventListener('click',()=>{filters.forEach(([,i])=>{$('filter'+i).value='';});render();});
+$('rank').addEventListener('change',render);
+const years=unique(data.map(row=>row[0].slice(0,4)));
+function card(label,value,note){
+  const el=create('article',null,$('cards'));create('small',label,el);create('strong',value,el);
+  if(note)create('small',note,el);
+}
+function breakdown(id,rows,index){
+  const groups=[...group(rows,r=>r[index])].map(([key,v])=>[key,sum(v,9),sum(v,12)]).sort((a,b)=>b[1]-a[1]);
+  const total=sum(rows,9), parent=$(id);parent.replaceChildren();
+  if(!groups.length)create('p','No matching sales.',parent);
+  for(const [key,sales,profit] of groups){
+    const line=create('div',null,parent);line.className='line';
+    create('span',key,line).className='line-name';
+    create('span',fmt(sales),line).className='line-value';
+    const track=create('div',null,line);track.className='track';
+    const fill=create('div',null,track);fill.className='fill';fill.style.width=(sales/groups[0][1]*100)+'%';
+    create('small',pct(ratio(sales,total))+' of revenue · '+fmt(profit)+' profit',line);
+  }
+}
+let points=[];
+let activePoint=-1;
+const chart=$('trend');
+const tooltip=$('chart-tooltip');
+const chartLeft=68;
+const chartRight=24;
+chart.addEventListener('pointermove',event=>{
+  if(!points.length)return;
+  const bounds=chart.getBoundingClientRect();
+  const relative=event.clientX-bounds.left;
+  const fraction=(relative-chartLeft)/(bounds.width-chartLeft-chartRight);
+  activePoint=Math.max(0,Math.min(points.length-1,Math.round(fraction*(points.length-1))));
+  const [month,revenue,profit]=points[activePoint];
+  tooltip.textContent=month+'\nRevenue '+precise.format(revenue)+'\nProfit '+precise.format(profit);
+  tooltip.hidden=false;
+  tooltip.style.left=Math.max(0,Math.min(relative+12,bounds.width-tooltip.offsetWidth))+'px';
+  draw();
+});
+chart.addEventListener('pointerleave',()=>{
+  activePoint=-1;
+  tooltip.hidden=true;
+  draw();
+});
+function draw(){
+  const c=chart, width=c.clientWidth,height=c.clientHeight,dpr=window.devicePixelRatio||1;
+  c.width=width*dpr;c.height=height*dpr;
+  const g=c.getContext('2d');g.scale(dpr,dpr);g.font='11px system-ui';
+  if(!points.length){g.fillText('No matching sales.',10,30);return;}
+  const left=chartLeft,right=width-chartRight,top=16,bottom=height-30;
+  const low=Math.min(0,...points.map(p=>p[2])),high=Math.max(1,...points.map(p=>Math.max(p[1],p[2])));
+  const y=value=>bottom-(value-low)/(high-low)*(bottom-top);
+  const x=i=>left+(right-left)*(points.length===1?.5:i/(points.length-1));
+  for(let i=0;i<=4;i++){
+    const value=low+(high-low)*i/4, yy=y(value);
+    g.strokeStyle='#dce5ee';g.beginPath();g.moveTo(left,yy);g.lineTo(right,yy);g.stroke();
+    g.fillStyle='#405570';g.textAlign='right';g.fillText(Math.abs(value)>=1000?'$'+(value/1000).toFixed(1).replace(/\.0$/,'')+'k':fmt(value),left-8,yy+4);
+  }
+  const step=Math.max(1,Math.ceil(points.length/Math.max(1,Math.floor((right-left)/72))));
+  points.forEach(([month],i)=>{if(i%step===0){g.textAlign='center';g.fillText(month,x(i),bottom+18);}});
+  const shade=g.createLinearGradient(0,top,0,bottom);
+  shade.addColorStop(0,'#5142c43b');shade.addColorStop(1,'#5142c404');
+  g.fillStyle=shade;g.beginPath();g.moveTo(x(0),y(0));
+  points.forEach((row,i)=>g.lineTo(x(i),y(row[1])));
+  g.lineTo(x(points.length-1),y(0));g.closePath();g.fill();
+  if(activePoint>=0){
+    g.strokeStyle='#8491ac';g.beginPath();g.moveTo(x(activePoint),top);g.lineTo(x(activePoint),bottom);g.stroke();
+  }
+  for(const [index,color] of [[1,'#5142c4'],[2,'#007c70']]){
+    g.strokeStyle=color;g.fillStyle=color;g.lineWidth=2;g.beginPath();
+    points.forEach((row,i)=>i?g.lineTo(x(i),y(row[index])):g.moveTo(x(i),y(row[index])));g.stroke();
+    points.forEach((row,i)=>{g.beginPath();g.arc(x(i),y(row[index]),i===activePoint?4:points.length>24?1.7:2.5,0,2*Math.PI);g.fill();});
+  }
+}
+function render(){
+  activePoint=-1;
+  tooltip.hidden=true;
+  const selectedYear=$('filter0').value;
+  const base=data.filter(row=>filters.slice(1).every(([,i])=>!$('filter'+i).value||$('filter'+i).value===row[i]));
+  const rows=base.filter(row=>!selectedYear||row[0].startsWith(selectedYear));
+  const rev=sum(rows,9),profit=sum(rows,12),orders=new Set(rows.map(r=>r[1])).size;
+  const year=Number(selectedYear||years.at(-1));
+  const yearly=y=>sum(base.filter(r=>r[0].startsWith(String(y))),9);
+  const prior=yearly(year-1);
+  $('cards').replaceChildren();
+  card('Total revenue',fmt(rev));card('Total profit',fmt(profit));
+  card('Profit margin',pct(ratio(profit,rev)));card('Unique orders',integer.format(orders));
+  card('Average order value',orders?precise.format(rev/orders):'—');
+  card('Revenue growth YoY',pct(prior?(yearly(year)-prior)/prior:null),year+' vs '+(year-1));
+  card('Average line discount',pct(ratio(sum(rows,11),rows.length)));
+  const byMonth=group(rows,r=>r[0].slice(0,7));
+  points=rows.length?unique(data.map(r=>r[0].slice(0,7)).filter(m=>!selectedYear||m.startsWith(selectedYear)))
+    .map(m=>[m,sum(byMonth.get(m)||[],9),sum(byMonth.get(m)||[],12)]):[];
+  draw();
+  table('monthly',['Month','Revenue','Profit'],points.map(([m,s,p])=>[m,fmt(s),fmt(p)]));
+  const seasonal=[...group(points,r=>r[0].slice(5))].sort(([a],[b])=>a.localeCompare(b));
+  table('season',['Month','Periods','Avg. revenue','Avg. profit'],seasonal.map(([m,v])=>[
+    new Date(2000,Number(m)-1).toLocaleString('en',{month:'short'}),v.length,fmt(sum(v,1)/v.length),fmt(sum(v,2)/v.length)]));
+  breakdown('regions',rows,2);breakdown('categories',rows,4);
+  const grouped=i=>[...group(rows,r=>r[i])].sort((a,b)=>sum(b[1],9)-sum(a[1],9));
+  const totals=(name,v)=>[name,fmt(sum(v,9)),fmt(sum(v,12)),pct(ratio(sum(v,12),sum(v,9))),pct(ratio(sum(v,9),rev))];
+  const headers=['Group','Revenue','Profit','Margin','Share'];
+  table('segments',headers,grouped(6).map(([name,v])=>totals(name,v)));
+  table('states',headers,grouped(3).map(([name,v])=>totals(name,v)));
+  const bands=['0%','>0–10%','>10–20%','>20–40%','>40%'];
+  const discount=group(rows,r=>r[11]===0?0:r[11]<=.1?1:r[11]<=.2?2:r[11]<=.4?3:4);
+  table('discounts',['Discount','Lines','Units','Units/line','Margin'],bands.flatMap((name,i)=>{
+    const v=discount.get(i);return v?[[name,v.length,sum(v,10),(sum(v,10)/v.length).toFixed(2),pct(ratio(sum(v,12),sum(v,9)))]]:[];
+  }));
+  const mode=$('rank').value;
+  const metric=v=>mode==='sales'?sum(v,9):mode==='profit'?sum(v,12):-sum(v,12);
+  const products=grouped(7).filter(([,v])=>mode!=='loss'||sum(v,12)<0);
+  table('products',['Product',...headers.slice(1)],products.sort((a,b)=>metric(b[1])-metric(a[1])).slice(0,12)
+    .map(([,v])=>totals(v[0][8],v)));
+}
+const tests=findings.sales_tests;
+const labels=[['Regional order revenue · one-way ANOVA','H01_ANOVA_order_revenue'],
+['Regional variance · Levene','Levene_median'],['Discount and line margin · Pearson r','H02_Pearson_one_sided'],
+['Discount and line margin · regression slope','H02_regression_one_sided'],
+['Discount and line quantity · Pearson r','discount_quantity_Pearson_two_sided']];
+table('research',['Test','Statistic','p-value'],labels.map(([label,key])=>{
+  const test=tests[key], stat=test.statistic??test.slope;
+  return [label,stat==null?test.status:stat.toFixed(4),test.p_value==null?'—':test.p_value===0?'< 0.001':test.p_value.toExponential(3)];
+}));
+const survey=findings.survey;
+$('survey').textContent=survey.status||('Survey n = '+survey.n+' · Decision mean '+survey.decision_composite.mean.toFixed(2)
+  +' · Cronbach’s α '+(survey.cronbach_alpha_decision?.toFixed(3)??'—')
+  +' · One-sided t-test p '+((survey.H03_one_sided_t_vs_3.p_value===0?'< 0.001':survey.H03_one_sided_t_vs_3.p_value?.toExponential(3))??'—'));
+window.addEventListener('resize',draw);
+render();
+</script></body></html>
